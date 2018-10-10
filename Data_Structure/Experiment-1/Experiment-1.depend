@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1539150476 source:/home/xuegao/Experiment-1/main.c
+	<stdio.h>
+	<stdint.h>
+	<stdlib.h>
+	<stdbool.h>
+	<string.h>
+
