@@ -1,7 +1,18 @@
 /*
 Ice Cream <i@xuegao.hk>
 This is an example program which written by Ice Cream.It only can be used in learning and watering.
-You can catch me on my GayHub https://github.com/ic0xgkk
+You can catch me on my GayHub https://github.com/ic0xgkk and Blog https://blog.xuegao.hk
+*/
+
+/*
+想了想，头指针索引有两个方案
+1.　头指针即为操作的指针，跟随程序遍历，备份头指针，赋值时还原头指针位置以进行遍历（本程序就是这样）
+2.　将头地址写入一个指针中，此指针不用来任何操作，需要插入时复制指针地址并遍历到尾部插入
+*/
+
+/*
+This version only support to insert to footer
+当前版本只支持从尾部插入，因为这个场景下不知道从中间插入有什么用处，就先不考虑了
 */
 
 #include <stdio.h>
@@ -17,7 +28,6 @@ struct Books{
     struct Books *next;
 };
 void *backup_header=NULL;
-//uint32_t BookNum=0;
 struct Books *head=NULL;
 bool finished_loading=false;
 
@@ -25,7 +35,6 @@ void insert_b(uint64_t isbn, char bookname[], uint32_t price);
 void search_b(void);
 void delete_b(void);
 void print_all(void);
-void test(void);
 
 int main()
 {
@@ -41,7 +50,10 @@ int main()
         char bookname[128];
 		memset(tmp, 0, sizeof(tmp));
 		fgets(tmp, sizeof(tmp)-1, f); // 包含了换行符
-		//printf("%s", tmp);
+		if( strlen(tmp) < 14 ) //　此处手动感谢TUNA成员帮我查出了读入空行的bug
+		{
+            break;
+		}
 		sscanf(tmp, "%lu%s%u\n",&isbn, bookname, &price);
 		insert_b(isbn,bookname,price);
 	}
@@ -80,7 +92,6 @@ int main()
             case 2:delete_b();break;
             case 3:search_b();break;
             case 4:print_all();break;
-            case 5:test();break;
             default:
             {
                 printf("What the fuck?You must retry it!\n");
@@ -136,18 +147,6 @@ void insert_b(uint64_t isbn, char bookname[], uint32_t price)
     head->next=NULL;
 }
 
-void test(void)
-{
-    while(1)
-    {
-        if(head==NULL)
-        {
-            break;
-        }
-        head=head->next;
-    }
-}
-
 void search_b(void)
 {
     bool found=false;
@@ -163,6 +162,15 @@ void search_b(void)
     {
         if(head->next==NULL)
         {
+            if(isbn==head->ISBN)
+            {
+                printf("Found!!!\n");
+                printf("ISBN\t\tBookName\t\tPrice\n");
+                printf("%lu\t\t%s\t\t%u\n\n",head->ISBN,head->BookName,head->PRICE);
+                found=true;
+                head=head->next;
+                break;
+            }
             printf("Stopping traversing...\n");
             if(found==false)
             {
@@ -192,35 +200,50 @@ void search_b(void)
 
 void delete_b(void)
 {
-    uint32_t id=0;
+    head=backup_header;
+    uint64_t isbn=0;
     bool exist=false;
-    printf("Input ID:");
-    scanf("%u",&id);
+    printf("Input ISBN:");
+    scanf("%lu",&isbn);
 
-    void *p=head;
-/*
-    for(uint32_t i=0;i<BookNum;i++)
+    while(1)
     {
-        if(head==NULL)
+        if(head->ISBN==isbn)
         {
-            printf("BookList is blank\n");
-            return NULL;
+            void *tmp=head;
+            head=head->next;
+            free(tmp);
+            exist=true;
+            backup_header=head;
+            break;
         }
-        if(head->next->ID==id)
+        if(head->next->ISBN==isbn)
         {
-            printf("Found it! \n");
+            void *tmp=head->next->next;
             free(head->next);
+            head->next=tmp;
             exist=true;
             break;
         }
-        head=head->next;
+        else
+        {
+            if(head->next==NULL)
+            {
+                break;
+            }
+            head=head->next;
+        }
     }
-    if(exist==false)
+
+    if(exist==true)
     {
-        printf("Not Found!\n");
+        printf("Found!!!\nFinished to delete\n");
     }
-    head=p;
-    */
+    else
+    {
+        printf("Not found!!!\n");
+    }
+
 }
 
 void print_all(void)
@@ -231,6 +254,7 @@ void print_all(void)
     {
         if(head->next==NULL)
         {
+            printf("%lu\t%-2s\t\t%6u\n",head->ISBN,head->BookName,head->PRICE);
             printf("Stopping traversing...\n");
             break;
         }
