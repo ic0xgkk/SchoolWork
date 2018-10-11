@@ -31,17 +31,20 @@ void *backup_header=NULL;
 struct Books *head=NULL;
 bool finished_loading=false;
 
+
 void insert_b(uint64_t isbn, char bookname[], uint32_t price);
 void search_b(void);
 void delete_b(void);
 void print_all(void);
+void write_file(void);
 
 int main()
 {
     printf("\nBooks Management System - Tiny\n");
     printf("Loading book list...\n");
 
-    FILE *f=fopen("book.txt","r");
+    FILE *f;
+    f=fopen("book.txt","r");
     while(!feof(f))
 	{
         char tmp[512];
@@ -58,6 +61,7 @@ int main()
 		insert_b(isbn,bookname,price);
 	}
 	finished_loading=true;
+    fclose(f);
 
     while(1)
     {
@@ -67,6 +71,7 @@ int main()
         printf("2. Delete\n");
         printf("3. Search\n");
         printf("4. Print All\n");
+        printf("5. Save and exit\n");
         printf("Input the number and ENTER to do that you want do :");
         scanf("%u",&sel);
 
@@ -92,6 +97,7 @@ int main()
             case 2:delete_b();break;
             case 3:search_b();break;
             case 4:print_all();break;
+            case 5:write_file();break;
             default:
             {
                 printf("What the fuck?You must retry it!\n");
@@ -243,6 +249,65 @@ void delete_b(void)
     {
         printf("Not found!!!\n");
     }
+
+}
+
+void write_file(void)
+{
+    FILE *ff=fopen("book.txt","w");
+    uint16_t num=0;
+    head=backup_header;
+    while(1)
+    {
+        if(head->next==NULL)
+        {
+            num++;
+            break;
+        }
+        else
+        {
+            num++;
+            head=head->next;
+        }
+    }
+    head=backup_header;
+
+    uint64_t mem_size=sizeof(struct Books)*num;
+    char *fls=(char *)malloc(mem_size);
+    bzero(fls, mem_size);
+    char *tmp=(char *)malloc(sizeof(struct Books));
+    bzero(tmp, sizeof(struct Books));
+    while(1)
+    {
+        if(head->next==NULL)
+        {
+            bzero(tmp, sizeof(struct Books));
+
+            snprintf(tmp, sizeof(struct Books), "%lu %s %u\n",head->ISBN, head->BookName, head->PRICE);
+            strcat(fls, tmp);
+
+            break;
+        }
+        else
+        {
+            bzero(tmp, sizeof(struct Books));
+
+            snprintf(tmp, sizeof(struct Books), "%lu %s %u\n",head->ISBN, head->BookName, head->PRICE);
+            strcat(fls, tmp);
+
+            head=head->next;
+            continue;
+        }
+    }
+    free(tmp);
+
+    fprintf(ff, "%s",fls);
+    free(fls);
+
+    fclose(ff);
+
+    printf("Sync Done!\n");
+    exit(0);
 
 }
 
